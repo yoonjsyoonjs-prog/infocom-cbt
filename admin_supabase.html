@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>정보통신 CBT 관리자</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+body{background:#f8fafc}.hidden{display:none!important}.topbar{display:flex;justify-content:space-between;align-items:center;gap:12px}.topbar button{width:auto}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}.small{font-size:.9rem;color:#64748b}.success{color:#047857}.danger-text{color:#b91c1c}.question-row{border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin:10px 0;background:#fff}.question-row .actions{display:flex;gap:8px;margin-top:10px}.question-row button{width:auto;margin:0;padding:8px 12px}.exam-row{border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin:10px 0;background:#fff}.exam-row .actions{display:flex;gap:8px;margin-top:10px}.exam-row button{width:auto;margin:0;padding:8px 12px}.option-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.option-line{display:flex;gap:8px;align-items:center}.option-line input[type=text]{margin:0}.badge{display:inline-block;padding:3px 8px;border-radius:999px;background:#e0e7ff;color:#3730a3;font-size:.8rem}.danger{background:#ef4444!important}.secondary{background:#64748b!important}@media(max-width:700px){.grid2,.option-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="container">
+<div id="loginView">
+<h1>🛠️ 정보통신 CBT 관리자</h1>
+<div class="card">
+<h2>관리자 로그인</h2>
+<input id="loginEmail" type="email" placeholder="관리자 이메일">
+<input id="loginPassword" type="password" placeholder="비밀번호">
+<button id="loginBtn">관리자 로그인</button>
+<p id="loginMsg" class="small"></p>
+</div>
+</div>
+
+<div id="adminView" class="hidden">
+<div class="topbar"><div><h1>🛠️ 정보통신 CBT 관리자</h1><p id="who" class="small"></p></div><button id="logoutBtn" class="secondary">로그아웃</button></div>
+
+<div class="card">
+<h2>① 관리할 시험 종류</h2>
+<select id="examType">
+<option value="wireless">📻 무선설비기사/산업기사</option>
+<option value="wireless_craftsman">📻 무선설비기능사</option>
+<option value="infocom_craftsman">🎖️ 정보통신기능사</option>
+<option value="infocom_general" selected>💻 정보통신기사</option>
+<option value="telecom_master">⚡ 통신설비기능장</option>
+</select>
+<p class="small">현재 선택한 종류의 문제만 관리자 화면에 표시됩니다.</p>
+</div>
+
+<div class="card">
+<h2>② 문제 등록</h2>
+<div class="grid2">
+<div><label>과목</label><select id="subject"></select></div>
+<div><label>문제</label><textarea id="question" rows="3" placeholder="문제 내용을 입력하세요"></textarea></div>
+</div>
+<h3>보기 4개</h3>
+<div class="option-grid">
+<div class="option-line"><input type="radio" name="correct" value="0" checked><input id="opt0" type="text" placeholder="1번 보기"></div>
+<div class="option-line"><input type="radio" name="correct" value="1"><input id="opt1" type="text" placeholder="2번 보기"></div>
+<div class="option-line"><input type="radio" name="correct" value="2"><input id="opt2" type="text" placeholder="3번 보기"></div>
+<div class="option-line"><input type="radio" name="correct" value="3"><input id="opt3" type="text" placeholder="4번 보기"></div>
+</div>
+<button id="saveQuestion">문제 저장</button>
+<p id="questionMsg" class="small"></p>
+</div>
+
+<div class="card">
+<h2>③ 기존 문제 가져오기</h2>
+<p class="small">기존 관리자 HTML에서 내보낸 JSON/TXT 파일을 가져올 때 사용합니다. 이 기능은 관리자에게만 보입니다.</p>
+<input id="importFile" type="file" accept=".txt,.json">
+<button id="importBtn">기존 문제 가져오기</button>
+<p id="importMsg" class="small"></p>
+</div>
+
+<div class="card">
+<h2>④ 등록된 문제 <span id="count" class="badge">0개</span></h2>
+<input id="search" placeholder="문제 검색">
+<div id="questionList"></div>
+</div>
+
+<div class="card">
+<h2>⑤ 시험 만들기</h2>
+<div class="grid2">
+<div><label>시험 제목</label><input id="examTitle" placeholder="예: 정보통신기사 필기 모의고사 1회"></div>
+<div><label>시험 코드</label><input id="examCode" placeholder="예: ICT001"></div>
+<div><label>시험 시간(분)</label><input id="minutes" type="number" value="150"></div>
+<div><label>문항 수</label><input id="limit" type="number" value="100"></div>
+</div>
+<button id="createExam">시험 만들기</button>
+<p id="examMsg" class="small"></p>
+</div>
+
+<div class="card">
+<h2>⑥ 만들어진 시험</h2>
+<div id="examList"></div>
+</div>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const configs={
+ wireless:{name:'무선설비기사/산업기사',subjects:['제1과목 디지털 전자회로','제2과목 무선통신 기기','제3과목 안테나 엔지니어링','제4과목 무선통신 시스템 운용','제5과목 컴퓨터 일반및 무선설비기준']},
+ wireless_craftsman:{name:'무선설비기능사',subjects:['제1과목 전기전자개론','제2과목 컴퓨터일반','제3과목 무선통신일반','제4과목 무선설비기준']},
+ infocom_craftsman:{name:'정보통신기능사',subjects:['제1과목 정보통신일반','제2과목 컴퓨터시스템','제3과목 통신시스템 구축·운용','제4과목 정보설비기준']},
+ infocom_general:{name:'정보통신기사',subjects:['제1과목 정보전송일반','제2과목 정보통신기기','제3과목 정보통신네트워크','제4과목 정보통신시스템 운용','제5과목 컴퓨터일반 및 정보설비']},
+ telecom_master:{name:'통신설비기능장',subjects:['제1과목 유선통신','제2과목 무선통신','제3과목 정보통신 네트워크','제4과목 통신선로','제5과목 공업경영']}
+};
+let user=null, currentQuestions=[];
+function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));}
+function showLogin(msg=''){ $('loginView').classList.remove('hidden'); $('adminView').classList.add('hidden'); $('loginMsg').textContent=msg; }
+function showAdmin(){ $('loginView').classList.add('hidden'); $('adminView').classList.remove('hidden'); $('who').textContent=`로그인: ${user.email}`; loadSubjects(); loadQuestions(); loadExams(); }
+async function boot(){
+ const {data}=await supabaseClient.auth.getSession(); user=data.session?.user||null;
+ if(!user){showLogin();return;}
+ const {data:p,error}=await supabaseClient.from('profiles').select('role,email').eq('id',user.id).single();
+ if(error||p?.role!=='admin'){await supabaseClient.auth.signOut();showLogin('관리자 권한이 없는 계정입니다. 먼저 관리자 권한을 설정하세요.');return;}
+ showAdmin();
+}
+$('loginBtn').onclick=async()=>{const email=$('loginEmail').value.trim(),password=$('loginPassword').value;if(!email||!password){$('loginMsg').textContent='이메일과 비밀번호를 입력하세요.';return;}const {data,error}=await supabaseClient.auth.signInWithPassword({email,password});if(error){$('loginMsg').textContent=error.message;return;}user=data.user;const {data:p}=await supabaseClient.from('profiles').select('role').eq('id',user.id).single();if(p?.role!=='admin'){await supabaseClient.auth.signOut();showLogin('관리자 권한이 없습니다.');return;}showAdmin();};
+$('logoutBtn').onclick=async()=>{await supabaseClient.auth.signOut();location.reload()};
+$('examType').onchange=()=>{loadSubjects();loadQuestions()};
+function loadSubjects(){const c=configs[$('examType').value];$('subject').innerHTML=c.subjects.map((s,i)=>`<option value="${i+1}">${esc(s)}</option>`).join('');}
+$('saveQuestion').onclick=async()=>{
+ const question=$('question').value.trim(), options=[0,1,2,3].map(i=>$('opt'+i).value.trim()), correct=Number(document.querySelector('input[name="correct"]:checked').value), exam_type=$('examType').value, subject=Number($('subject').value);
+ if(!question||options.some(x=>!x)){ $('questionMsg').textContent='문제와 4개 보기를 모두 입력하세요.';return; }
+ const {error}=await supabaseClient.from('questions').insert({exam_type,subject,question,options,correct_index:correct,created_by:user.id});
+ if(error){$('questionMsg').textContent=error.message;return;}
+ $('questionMsg').textContent='문제가 저장되었습니다.';$('questionMsg').className='small success';
+ $('question').value='';[0,1,2,3].forEach(i=>$('opt'+i).value='');$('opt0').focus();loadQuestions();
+};
+async function loadQuestions(){
+ const type=$('examType').value;const search=$('search').value.trim();
+ let q=supabaseClient.from('questions').select('id,subject,question,options,correct_index,created_at').eq('exam_type',type).order('created_at',{ascending:false});
+ const {data,error}=await q;if(error){$('questionList').textContent=error.message;return;}currentQuestions=data||[];const filtered=search?currentQuestions.filter(x=>x.question.toLowerCase().includes(search.toLowerCase())):currentQuestions;$('count').textContent=`${currentQuestions.length}개`;
+ $('questionList').innerHTML=filtered.map(x=>`<div class="question-row"><b>${x.subject}과목</b> · ${esc(x.question)}<br><span class="small">1. ${esc(x.options?.[0])}<br>2. ${esc(x.options?.[1])}<br>3. ${esc(x.options?.[2])}<br>4. ${esc(x.options?.[3])}<br><strong>정답: ${x.correct_index+1}번</strong></span><div class="actions"><button class="danger" onclick="deleteQuestion('${x.id}')">삭제</button></div></div>`).join('')||'<p class="small">등록된 문제가 없습니다.</p>';
+}
+$('search').oninput=loadQuestions;
+window.deleteQuestion=async id=>{if(!confirm('이 문제를 삭제할까요?'))return;const {error}=await supabaseClient.from('questions').delete().eq('id',id);if(error)alert(error.message);else loadQuestions()};
+$('importBtn').onclick=async()=>{
+ const file=$('importFile').files[0];if(!file){$('importMsg').textContent='파일을 선택하세요.';return;}
+ try{const arr=JSON.parse(await file.text());if(!Array.isArray(arr))throw Error('파일 형식이 배열이 아닙니다.');const rows=[];for(const x of arr){if(!x.question)continue;const opts=x.options||[x.correct,...(x.wrongs||[])];let ci=Number.isInteger(x.correct_index)?x.correct_index:0; if(!x.options){ci=0;}rows.push({exam_type:$('examType').value,subject:Number(x.subject)||1,question:String(x.question),options:opts,correct_index:ci,created_by:user.id});}if(!rows.length)throw Error('가져올 문제가 없습니다.');const {error}=await supabaseClient.from('questions').insert(rows);if(error)throw error;$('importMsg').textContent=`${rows.length}개 문제를 가져왔습니다.`;$('importMsg').className='small success';loadQuestions();}catch(e){$('importMsg').textContent='가져오기 실패: '+e.message;}
+};
+$('createExam').onclick=async()=>{const title=$('examTitle').value.trim(),code=$('examCode').value.trim();const duration=Number($('minutes').value),limit=Number($('limit').value);if(!title||!code){$('examMsg').textContent='시험 제목과 코드를 입력하세요.';return;}const {data,error}=await supabaseClient.from('exams').insert({title,code,duration_minutes:duration,question_count:limit,created_by:user.id}).select().single();if(error){$('examMsg').textContent=error.message;return;}const {data:n,error:e2}=await supabaseClient.rpc('admin_attach_all_questions',{p_exam_id:data.id});if(e2){$('examMsg').textContent=`시험은 만들어졌지만 문제 연결에 실패했습니다: ${e2.message}`;return;}$('examMsg').textContent=`시험 생성 완료! ${n}개 문제가 연결되었습니다.`;$('examMsg').className='small success';loadExams();};
+async function loadExams(){const {data,error}=await supabaseClient.from('exams').select('id,title,code,duration_minutes,question_count,is_active,created_at').order('created_at',{ascending:false});if(error){$('examList').textContent=error.message;return;}$('examList').innerHTML=(data||[]).map(e=>`<div class="exam-row"><b>${esc(e.title)}</b><br>시험 코드: <strong>${esc(e.code)}</strong><br>${e.duration_minutes}분 / ${e.question_count}문항<br><span class="badge">${e.is_active?'활성':'비활성'}</span><div class="actions"><button onclick="toggleExam('${e.id}',${!e.is_active})">${e.is_active?'시험 잠그기':'시험 열기'}</button><button class="danger" onclick="deleteExam('${e.id}')">삭제</button></div></div>`).join('')||'<p class="small">만든 시험이 없습니다.</p>';}
+window.toggleExam=async(id,on)=>{const {error}=await supabaseClient.from('exams').update({is_active:on}).eq('id',id);if(error)alert(error.message);else loadExams()};
+window.deleteExam=async id=>{if(!confirm('시험을 삭제할까요?'))return;const {error}=await supabaseClient.from('exams').delete().eq('id',id);if(error)alert(error.message);else loadExams()};
+boot();
+</script>
+</body></html>

@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>정보통신 CBT</title>
+<link rel="stylesheet" href="styles.css"></head><body><div class="container">
+<div id="loginView">
+<h1>📡 정보통신 CBT</h1><div class="card">
+<h2>학생 로그인</h2><input id="email" type="email" placeholder="이메일"><input id="password" type="password" placeholder="비밀번호">
+<button id="loginBtn">로그인</button><button class="secondary" id="signupBtn">학생 계정 만들기</button><p id="loginMsg" class="small"></p></div></div>
+
+<div id="homeView" class="hidden">
+<div class="topbar"><h1>📡 정보통신 CBT</h1><button class="secondary" id="logoutBtn">로그아웃</button></div>
+<div class="card"><h2>시험 입장</h2><input id="examCode" placeholder="선생님에게 받은 시험 코드"><button id="startBtn">시험 시작</button><p id="homeMsg" class="small"></p></div>
+</div>
+
+<div id="examView" class="hidden">
+<div class="topbar"><h2 id="examTitle"></h2><div class="timer" id="timer">--:--</div></div>
+<div class="card"><p id="progress"></p><div id="question"></div><div id="options"></div>
+<button class="secondary" id="prevBtn">⬅ 이전</button><button id="nextBtn">다음 ➡</button></div>
+<div class="card"><button class="danger" id="submitBtn">🏁 최종 제출</button></div>
+</div>
+
+<div id="resultView" class="hidden"><h1>📊 시험 결과</h1><div id="result"></div><button id="homeBtn">메인으로</button></div>
+</div><div id="watermark" class="watermark"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="config.js"></script><script src="app.js"></script></body></html>
