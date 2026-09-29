@@ -46,7 +46,7 @@ async function submitExam(){
  const payload=Object.entries(answers).map(([question_id,choice_index])=>({question_id,choice_index}));
  const {data,error}=await supabaseClient.rpc("submit_exam",{p_attempt_id:attemptId,p_answers:payload});
  if(error){alert(error.message);return}
- show("result"); $("result").innerHTML=`<div class="result">${data.score}점</div><p class="success">총 ${data.total}문항 중 ${data.correct}문항 정답</p>`+
+ show("resultView"); $("result").innerHTML=`<div class="result">${data.score}점</div><p class="success">총 ${data.total}문항 중 ${data.correct}문항 정답</p>`+
  (data.wrongs||[]).map(w=>`<div class="wrong"><b>문제:</b> ${escapeHtml(w.question)}<br>내 답: ${escapeHtml(w.user_answer||"미답안")}<br>정답: ${escapeHtml(w.correct_answer)}</div>`).join("");
 }
 $("homeBtn").onclick=()=>{location.reload()};
